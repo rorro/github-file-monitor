@@ -8,14 +8,15 @@ import configparser
 config = configparser.ConfigParser()
 config.read("secrets.ini")
 
-OWNER = "runelite"
-REPO = "runelite"
-FILE_PATH = "runelite-client/src/main/java/net/runelite/client/hiscore/HiscoreSkill.java"
+OWNER = config["repo"]["owner"]
+REPO = config["repo"]["repo"]
+FILE_PATH = config["repo"]["file_path"]
+DISCORD_WEBHOOK = config["discord"]["webhook"]
+
 API_URL = f"https://api.github.com/repos/{OWNER}/{REPO}/contents/{FILE_PATH}"
 HISTORY_URL = f"https://github.com/{OWNER}/{REPO}/commits/master/{FILE_PATH}"
 SHA_FILE = "content.json"
 WEBHOOK_CHARACTER_LIMIT = 2000
-DISCORD_WEBHOOK = config["discord"]["webhook"]
 
 def main():
     # Create the file if it doesn't exist.

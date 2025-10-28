@@ -1,4 +1,4 @@
-Create an ini file with the following contents
+Create a `secrects.ini` file with the following contents
 
 ```
 [discord]

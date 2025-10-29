@@ -11,7 +11,7 @@ config.read("secrets.ini")
 OWNER = config["repo"]["owner"]
 REPO = config["repo"]["repo"]
 FILE_PATH = config["repo"]["file_path"]
-DISCORD_WEBHOOK = config["discord"]["webhook"]
+DISCORD_WEBHOOKS = config["discord"]["webhooks"].split(',')
 
 API_URL = f"https://api.github.com/repos/{OWNER}/{REPO}/contents/{FILE_PATH}"
 HISTORY_URL = f"https://github.com/{OWNER}/{REPO}/commits/master/{FILE_PATH}"
@@ -37,14 +37,14 @@ def main():
     # No changes have happened when the sha is the same
     if old_data and old_data["sha"] == new_data["sha"]:
         return
-    
+
     if not old_data:
         # Just write the response to file, because there is nothing to compare to
         with open(SHA_FILE, 'w') as f:
             f.write(response.text)
 
         return
-    
+
     # Decode the old and new content to create a diff
     old_content = base64.b64decode(old_data["content"]).decode("utf-8").splitlines(keepends=True)
     new_content = base64.b64decode(new_data["content"]).decode("utf-8").splitlines(keepends=True)
@@ -54,13 +54,18 @@ def main():
 
     # Discord messages aren't sent if the character limit is exceeded.
     if len(formatted_diff) > WEBHOOK_CHARACTER_LIMIT:
-        requests.post(DISCORD_WEBHOOK, json={"content": f"The message exceeded the character limit of {WEBHOOK_CHARACTER_LIMIT}. Find the changes here: <{HISTORY_URL}>"})
+        post_to_webhooks({"content": f"The message exceeded the character limit of {WEBHOOK_CHARACTER_LIMIT}. Find the changes here: <{HISTORY_URL}>"})
 
-    requests.post(DISCORD_WEBHOOK, json={"content": formatted_diff})
+    post_to_webhooks({"content": formatted_diff})
 
     # After all is done, write the new data to the file for next comparison
     with open(SHA_FILE, 'w') as f:
         f.write(response.text)
+
+
+def post_to_webhooks(content):
+    for webhook in DISCORD_WEBHOOKS:
+        requests.post(webhook, json=content)
 
 if __name__ == '__main__':
     main()
